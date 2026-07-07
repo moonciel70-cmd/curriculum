@@ -1,0 +1,823 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>나만의 3개년 교육과정 편제표 – 고양일고</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Malgun Gothic','맑은 고딕',Arial,sans-serif;font-size:13px;background:#f0f2f5;color:#222}
+button{cursor:pointer;font-family:inherit;font-size:13px}
+
+/* ── 선택 화면 ── */
+#sel{max-width:900px;margin:0 auto;padding:16px}
+.ph{background:#1a5276;color:#fff;border-radius:8px;padding:16px 20px;text-align:center;margin-bottom:14px}
+.ph h1{font-size:20px}.ph p{font-size:11px;color:#aed6f1;margin-top:3px}
+.notice{background:#eaf4fb;border:1px solid #aed6f1;border-radius:6px;padding:9px 14px;font-size:12px;line-height:1.7;margin-bottom:8px}
+
+/* 등급 범례 */
+.legend{display:flex;gap:10px;align-items:center;margin-bottom:12px;flex-wrap:wrap;font-size:12px}
+.leg-item{display:flex;align-items:center;gap:5px;padding:4px 10px;border-radius:5px;border:1px solid}
+.leg-yes{background:#ddeeff;border-color:#6aaad5;color:#1a4f72}
+.leg-no{background:#fffde7;border-color:#e6c050;color:#7d6008}
+
+/* student info */
+.info-row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:14px;background:#fff;padding:10px 14px;border-radius:8px;box-shadow:0 1px 4px rgba(0,0,0,.08)}
+.info-row label{font-weight:bold;white-space:nowrap}
+.info-row input{border:1px solid #bdc3c7;border-radius:4px;padding:6px 10px;font-size:13px;font-family:inherit}
+#i-num{width:110px;letter-spacing:2px}#i-name{width:130px}
+#num-disp{font-size:12px;color:#1a5276;font-weight:bold}
+
+/* 카드 */
+.card{background:#fff;border-radius:8px;box-shadow:0 1px 4px rgba(0,0,0,.09);margin-bottom:12px;overflow:hidden}
+.card-hd{display:flex;align-items:center;justify-content:space-between;padding:10px 16px;cursor:pointer;user-select:none}
+.card-hd:hover{background:#f4f6f7}
+.card-bd{display:none;padding:12px 16px 14px}.card-bd.open{display:block}
+.card-title{font-weight:bold;font-size:14px}
+
+/* 학기 섹션 */
+.sem-card{border-radius:8px;box-shadow:0 1px 4px rgba(0,0,0,.09);margin-bottom:12px;overflow:hidden}
+.s2-1{background:#e8f4fd}.s2-2{background:#eafaf1}.s3-1{background:#fef9e7}.s3-2{background:#f5eef8}
+.sem-hd{display:flex;align-items:center;gap:10px;padding:11px 16px;border-bottom:1px solid rgba(0,0,0,.08)}
+.sem-title{font-size:15px;font-weight:bold}
+.rule-badge{font-size:11px;color:#555;background:rgba(255,255,255,.7);border-radius:12px;padding:2px 9px;border:1px solid rgba(0,0,0,.1)}
+.cnt{font-size:13px;font-weight:bold;margin-left:auto;padding:3px 12px;border-radius:12px}
+.cnt-ok{background:#d5f5e3;color:#1e8449}.cnt-warn{background:#fdebd0;color:#ca6f1e}.cnt-over{background:#fadbd8;color:#922b21}
+.sem-bd{padding:12px 16px 14px;background:#fff}
+
+/* 과목 라벨 */
+.grp-label{display:inline-block;font-size:11px;font-weight:bold;border-radius:3px;padding:1px 7px;margin-bottom:6px}
+.gl-사회{background:#d6eaf8;color:#1a5276}.gl-과학{background:#d5f5e3;color:#1e5631}
+.gl-수학{background:#fde8d8;color:#784212}.gl-영어{background:#e8daef;color:#4a235a}
+.gl-국어{background:#fef9e7;color:#7d6608}
+
+/* 과목 아이템 (기본=흰색) */
+.cg{display:grid;grid-template-columns:repeat(auto-fill,minmax(185px,1fr));gap:5px;margin-bottom:10px}
+.ci{display:flex;align-items:center;gap:6px;padding:5px 8px;border:1px solid #ddd;border-radius:5px;background:#fff;cursor:pointer;transition:background .12s}
+.ci:hover{background:#f0f8ff}.ci.ck{border-color:#85c1e9!important}
+.ci.dis{opacity:.45;pointer-events:none}
+.ci input[type=checkbox]{accent-color:#1a5276;width:14px;height:14px;flex-shrink:0}
+.ci.ri input[type=radio]{accent-color:#6c3483;width:14px;height:14px;flex-shrink:0}
+
+/* ★ 등급산출 과목 – 파란 배경 */
+.ci.gyes{background:#ddeeff;border-color:#90c0e8}
+.ci.gyes:hover{background:#c5dff8}
+.ci.gyes.ck{background:#aad0f5;border-color:#4a90d0}
+
+/* ★ 등급미산출 A/B/C (3단계) – 노란 배경 */
+.ci.gno{background:#fffde7;border-color:#e6c050}
+.ci.gno:hover{background:#fff9c4}
+.ci.gno.ck{background:#fff180;border-color:#c9a800}
+
+/* ★ 등급미산출 성취도 5단계 – 초록 배경 */
+.ci.gfive{background:#e8f8f0;border-color:#52be80}
+.ci.gfive:hover{background:#d5f5e3}
+.ci.gfive.ck{background:#abebc6;border-color:#27ae60}
+
+.cn{flex:1;font-size:12px}.cc{font-size:11px;color:#777;white-space:nowrap}
+.fixed-ci{display:flex;align-items:center;gap:6px;padding:5px 8px;border:1px solid #e0e0e0;border-radius:5px;background:#f8f9fa}
+.fixed-ci .cn{color:#555}
+.fixed-ci.gyes{background:#ddeeff;border-color:#90c0e8}.fixed-ci.gyes .cn{color:#1a4f72}
+.fixed-ci.gno{background:#fffde7;border-color:#e6c050}.fixed-ci.gno .cn{color:#7d6008}
+
+/* 자동 선택 표시 (예술 2학기) */
+.auto-sel-box{background:#f0fff4;border:1px dashed #52be80;border-radius:5px;padding:8px 12px;font-size:12px;color:#1e8449;min-height:36px}
+.auto-sel-box b{font-size:13px}
+.auto-none{color:#aaa;font-style:italic}
+
+.divider{border:none;border-top:1px dashed #ccc;margin:8px 0}
+.sub-hd{font-size:12px;font-weight:bold;color:#555;margin:8px 0 5px}
+.pick2{display:inline-block;font-size:11px;background:#fadbd8;color:#922b21;border-radius:3px;padding:1px 7px;margin-left:6px}
+
+/* 학점 현황 */
+.cr-card{background:#fff;border-radius:8px;box-shadow:0 1px 4px rgba(0,0,0,.09);padding:12px 16px;margin-bottom:12px}
+.cr-card h3{font-size:13px;font-weight:bold;margin-bottom:8px;color:#1a5276}
+table.ct{width:100%;border-collapse:collapse;font-size:12px}
+table.ct th,table.ct td{padding:4px 8px;text-align:center;border-bottom:1px solid #f0f0f0}
+table.ct th{background:#eaecee;font-weight:bold}
+table.ct td:first-child{text-align:left}
+.ok{color:#1e8449;font-weight:bold}.wn{color:#ca6f1e;font-weight:bold}
+
+.btn-gen{display:block;width:100%;padding:14px;background:#1a5276;color:#fff;border:none;border-radius:8px;font-size:16px;font-weight:bold}
+.btn-gen:hover{background:#154360}
+
+/* ── 결과 화면 ── */
+#out{display:none;padding:16px}
+.out-acts{max-width:1100px;margin:0 auto 10px;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.btn-back{padding:7px 16px;background:#7f8c8d;color:#fff;border:none;border-radius:5px}
+.btn-print{padding:7px 16px;background:#1e8449;color:#fff;border:none;border-radius:5px;font-weight:bold}
+.sheet{max-width:1100px;margin:0 auto;background:#fff;padding:18px 22px;border:1px solid #ccc;border-radius:4px}
+.s-title{text-align:center;font-size:17px;font-weight:bold;margin-bottom:3px}
+.s-sub{text-align:center;font-size:11px;color:#666;margin-bottom:10px}
+.s-info{display:flex;justify-content:center;gap:24px;font-size:12px;margin-bottom:10px}
+.s-info span{border-bottom:1px solid #aaa;padding-bottom:2px;min-width:130px;text-align:center}
+.tbl{width:100%;border-collapse:collapse;font-size:10.5px;table-layout:fixed}
+.tbl th,.tbl td{border:1px solid #555;padding:2px 3px;text-align:left;vertical-align:middle;word-break:keep-all;line-height:1.3}
+.tbl th{background:#d5d8dc;font-weight:bold;font-size:10.5px}
+.th2{background:#aed6f1}.th3{background:#a9dfbf}
+.gc{background:#e8ecf4;font-weight:bold;font-size:10px}
+.fc{background:#f5f5f5;font-size:10.5px}
+.sc{background:#eafaf1;font-weight:bold;color:#1e5631;font-size:10.5px}
+.ac{background:#fdf2ff;font-weight:bold;color:#6c3483;font-size:10.5px}
+.ec{color:#ccc;font-size:9px}.tc{font-size:10px;color:#555}
+.sym-f{color:#1a5276;font-weight:bold;font-size:12px}
+.sym-s{color:#1e8449;font-weight:bold;font-size:12px}
+.sym-a{color:#6c3483;font-weight:bold;font-size:12px}
+.sum-tbl{width:100%;border-collapse:collapse;margin-top:12px;font-size:11px}
+.sum-tbl th,.sum-tbl td{border:1px solid #aaa;padding:4px 6px;text-align:center}
+.sum-tbl th{background:#eaecee;font-weight:bold}
+@media print{
+  body{background:#fff}#sel{display:none!important}.out-acts{display:none!important}
+  #out{display:block!important;padding:0}.sheet{border:none;padding:8px}
+  @page{margin:12mm 8mm}
+}
+</style>
+</head>
+<body>
+
+<!-- ═══════════ 선택 화면 ═══════════ -->
+<div id="sel">
+<div class="ph">
+  <h1>나만의 3개년 교육과정 편제표 만들기</h1>
+  <p>고양일고등학교 2025, 2026 입학생용</p>
+</div>
+
+<div class="info-row">
+  <label>학번(5자리)</label>
+  <input id="i-num" type="text" maxlength="5" placeholder="20808" oninput="parseNum()">
+  <span id="num-disp"></span>
+  <label style="margin-left:10px">이름</label>
+  <input id="i-name" type="text" placeholder="홍길동" style="width:120px">
+</div>
+
+<div class="notice">
+  ※ 2학년 수강 신청할 과목을 선택한 후 3학년 수강 신청할 과목과 함께 확인하세요.<br>
+  &nbsp;&nbsp;&nbsp;(사회 <b>8학점</b>, 과학 <b>10학점</b> 이수 확인)
+</div>
+
+<div class="legend">
+  <b>과목 구분 :</b>
+  <span class="leg-item leg-yes">■ 등급산출 (5등급)</span>
+  <span class="leg-item leg-no">■ 등급미산출 (성취도 3단계 A/B/C)</span>
+  <span class="leg-item" style="background:#e8f8f0;border-color:#52be80;color:#1e6e42">■ 등급미산출 (성취도 5단계)</span>
+</div>
+
+<!-- ─── 필수 이수 (1학년) ─── -->
+<div class="card">
+  <div class="card-hd" onclick="tog(this)">
+    <span class="card-title">📚 필수 이수 과목 (1학년 학교 지정)</span>
+    <span style="font-size:12px;color:#888">▼ 펼치기</span>
+  </div>
+  <div class="card-bd">
+    <div class="sub-hd">국어 (8학점)</div><div class="cg"><div class="fixed-ci gyes"><span class="cn">공통국어1,2</span><span class="cc">7학점</span></div></div>
+    <div class="sub-hd">수학 (8학점)</div><div class="cg"><div class="fixed-ci gyes"><span class="cn">공통수학1,2</span><span class="cc">8학점</span></div></div>
+    <div class="sub-hd">영어 (8학점)</div><div class="cg"><div class="fixed-ci gyes"><span class="cn">공통영어1,2</span><span class="cc">7학점</span></div></div>
+    <div class="sub-hd">한국사 (6학점)</div><div class="cg"><div class="fixed-ci gyes"><span class="cn">한국사</span><span class="cc">6학점</span></div></div>
+    <div class="sub-hd">사회 (8학점)</div><div class="cg"><div class="fixed-ci gyes"><span class="cn">통합사회1,2</span><span class="cc">7학점</span></div></div>
+    <div class="sub-hd">과학 (10학점)</div><div class="cg">
+      <div class="fixed-ci gyes"><span class="cn">통합과학1,2</span><span class="cc">7학점</span></div>
+      <div class="fixed-ci gno"><span class="cn">과학탐구실험1,2</span><span class="cc">2학점</span></div>
+    </div>
+    <div class="sub-hd">체육 (10학점)</div><div class="cg"><div class="fixed-ci gno"><span class="cn">체육1, 2</span><span class="cc">4학점</span></div></div>
+    <div class="sub-hd">기술·가정 / 정보</div><div class="cg">
+      <div class="fixed-ci gyes"><span class="cn">기술·가정 (1학기)</span><span class="cc">3학점</span></div>
+      <div class="fixed-ci gyes"><span class="cn">정보 (2학기)</span><span class="cc">3학점</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ─── 2·3학년 지정 ─── -->
+<div class="card">
+  <div class="card-hd" onclick="tog(this)">
+    <span class="card-title">📌 2·3학년 지정 과목 (국어·수학·영어·체육)</span>
+    <span style="font-size:12px;color:#888">▼ 펼치기</span>
+  </div>
+  <div class="card-bd">
+    <div class="sub-hd">국어 – 2·3학년 지정</div>
+    <div class="cg">
+      <div class="fixed-ci gyes"><span class="cn">문학 (2학년 1학기)</span><span class="cc">4학점</span></div>
+      <div class="fixed-ci gyes"><span class="cn">화법과 언어 (2학년 2학기)</span><span class="cc">4학점</span></div>
+      <div class="fixed-ci gyes"><span class="cn">독서와 작문 (3학년 1학기)</span><span class="cc">3학점</span></div>
+      <div class="fixed-ci gyes"><span class="cn">언어생활 탐구 (3학년 2학기)</span><span class="cc">3학점</span></div>
+    </div>
+    <div class="sub-hd">수학 – 2·3학년 지정</div>
+    <div class="cg">
+      <div class="fixed-ci gyes"><span class="cn">대수 (2학년 1학기)</span><span class="cc">4학점</span></div>
+      <div class="fixed-ci gyes"><span class="cn">미적분Ⅰ (2학년 2학기)</span><span class="cc">4학점</span></div>
+      <div class="fixed-ci gyes"><span class="cn">확률과 통계 (3학년 1학기)</span><span class="cc">3학점</span></div>
+      <div class="fixed-ci gyes"><span class="cn">실용 통계 (3학년 2학기)</span><span class="cc">3학점</span></div>
+    </div>
+    <div class="sub-hd">영어 – 2·3학년 지정</div>
+    <div class="cg">
+      <div class="fixed-ci gyes"><span class="cn">영어Ⅰ (2학년 1학기)</span><span class="cc">4학점</span></div>
+      <div class="fixed-ci gyes"><span class="cn">영어Ⅱ (2학년 2학기)</span><span class="cc">4학점</span></div>
+      <div class="fixed-ci gyes"><span class="cn">영어 독해와 작문 (3학년 1학기)</span><span class="cc">3학점</span></div>
+      <div class="fixed-ci gyes"><span class="cn">심화 영어 (3학년 2학기)</span><span class="cc">3학점</span></div>
+    </div>
+    <div class="sub-hd">체육 – 2·3학년 지정</div>
+    <div class="cg">
+      <div class="fixed-ci gno"><span class="cn">운동과 건강 (2학년 1학기)</span><span class="cc">2학점</span></div>
+      <div class="fixed-ci gno"><span class="cn">스포츠 문화 (2학년 2학기)</span><span class="cc">2학점</span></div>
+      <div class="fixed-ci gno"><span class="cn">스포츠 생활1 (3학년 1학기)</span><span class="cc">2학점</span></div>
+      <div class="fixed-ci gno"><span class="cn">스포츠 생활2 (3학년 2학기)</span><span class="cc">2학점</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ════ 2학년 1학기 (택4) ════ -->
+<div class="sem-card s2-1">
+  <div class="sem-hd">
+    <span class="sem-title">2학년 1학기 선택</span>
+    <span class="rule-badge">사회 · 과학 · 국수영 추가 중 <b>택4</b></span>
+    <span class="cnt cnt-warn" id="cnt-g2s1">0 / 4</span>
+  </div>
+  <div class="sem-bd">
+    <span class="grp-label gl-사회">사회</span>
+    <div class="cg">
+      <label class="ci gyes"><input type="checkbox" class="g2s1" data-subj="사회" value="사회와 문화" onchange="pick('g2s1',4)"><span class="cn">사회와 문화</span><span class="cc">3학점</span></label>
+      <label class="ci gyes"><input type="checkbox" class="g2s1" data-subj="사회" value="정치" onchange="pick('g2s1',4)"><span class="cn">정치</span><span class="cc">3학점</span></label>
+      <label class="ci gyes"><input type="checkbox" class="g2s1" data-subj="사회" value="동아시아 역사 기행" onchange="pick('g2s1',4)"><span class="cn">동아시아 역사 기행</span><span class="cc">3학점</span></label>
+      <label class="ci gyes"><input type="checkbox" class="g2s1" data-subj="사회" value="세계시민과 지리" onchange="pick('g2s1',4)"><span class="cn">세계시민과 지리</span><span class="cc">3학점</span></label>
+      <label class="ci gyes"><input type="checkbox" class="g2s1" data-subj="사회" value="윤리와 사상" onchange="pick('g2s1',4)"><span class="cn">윤리와 사상</span><span class="cc">3학점</span></label>
+    </div>
+    <span class="grp-label gl-과학">과학</span>
+    <div class="cg">
+      <label class="ci gyes"><input type="checkbox" class="g2s1" data-subj="과학" value="물리학" onchange="pick('g2s1',4)"><span class="cn">물리학</span><span class="cc">3학점</span></label>
+      <label class="ci gyes"><input type="checkbox" class="g2s1" data-subj="과학" value="화학" onchange="pick('g2s1',4)"><span class="cn">화학</span><span class="cc">3학점</span></label>
+      <label class="ci gyes"><input type="checkbox" class="g2s1" data-subj="과학" value="생명과학" onchange="pick('g2s1',4)"><span class="cn">생명과학</span><span class="cc">3학점</span></label>
+      <label class="ci gyes"><input type="checkbox" class="g2s1" data-subj="과학" value="지구과학" onchange="pick('g2s1',4)"><span class="cn">지구과학</span><span class="cc">3학점</span></label>
+    </div>
+    <span class="grp-label gl-수학">수학 추가</span>
+    <span class="grp-label gl-영어">영어 추가</span>
+    <span class="grp-label gl-국어">국어 추가</span>
+    <div class="cg">
+      <label class="ci gyes"><input type="checkbox" class="g2s1" data-subj="수학추가" value="기하" onchange="pick('g2s1',4)"><span class="cn">기하</span><span class="cc">3학점</span></label>
+      <label class="ci gyes"><input type="checkbox" class="g2s1" data-subj="영어추가" value="영어발표와 토론" onchange="pick('g2s1',4)"><span class="cn">영어발표와 토론</span><span class="cc">3학점</span></label>
+      <label class="ci gyes"><input type="checkbox" class="g2s1" data-subj="국어추가" value="독서토론과 글쓰기" onchange="pick('g2s1',4)"><span class="cn">독서토론과 글쓰기</span><span class="cc">3학점</span></label>
+    </div>
+  </div>
+</div>
+
+<!-- ════ 2학년 2학기 (택4) ════ -->
+<div class="sem-card s2-2">
+  <div class="sem-hd">
+    <span class="sem-title">2학년 2학기 선택</span>
+    <span class="rule-badge">사회 · 과학 · 국수영 추가 중 <b>택4</b></span>
+    <span class="cnt cnt-warn" id="cnt-g2s2">0 / 4</span>
+  </div>
+  <div class="sem-bd">
+    <span class="grp-label gl-사회">사회</span>
+    <div class="cg">
+      <label class="ci gyes"><input type="checkbox" class="g2s2" data-subj="사회" value="법과 사회" onchange="pick('g2s2',4)"><span class="cn">법과 사회</span><span class="cc">3학점</span></label>
+      <label class="ci gyes"><input type="checkbox" class="g2s2" data-subj="사회" value="경제" onchange="pick('g2s2',4)"><span class="cn">경제</span><span class="cc">3학점</span></label>
+      <label class="ci gyes"><input type="checkbox" class="g2s2" data-subj="사회" value="세계사" onchange="pick('g2s2',4)"><span class="cn">세계사</span><span class="cc">3학점</span></label>
+      <label class="ci gyes"><input type="checkbox" class="g2s2" data-subj="사회" value="한국지리 탐구" onchange="pick('g2s2',4)"><span class="cn">한국지리 탐구</span><span class="cc">3학점</span></label>
+      <label class="ci gyes"><input type="checkbox" class="g2s2" data-subj="사회" value="현대사회와 윤리" onchange="pick('g2s2',4)"><span class="cn">현대사회와 윤리</span><span class="cc">3학점</span></label>
+    </div>
+    <span class="grp-label gl-과학">과학</span>
+    <div class="cg">
+      <label class="ci gyes"><input type="checkbox" class="g2s2" data-subj="과학" value="역학과 에너지" onchange="checkSciPrereq(this);pick('g2s2',4)"><span class="cn">역학과 에너지</span><span class="cc">3학점</span></label>
+      <label class="ci gyes"><input type="checkbox" class="g2s2" data-subj="과학" value="물질과 에너지" onchange="checkSciPrereq(this);pick('g2s2',4)"><span class="cn">물질과 에너지</span><span class="cc">3학점</span></label>
+      <label class="ci gyes"><input type="checkbox" class="g2s2" data-subj="과학" value="세포와 물질대사" onchange="checkSciPrereq(this);pick('g2s2',4)"><span class="cn">세포와 물질대사</span><span class="cc">3학점</span></label>
+      <label class="ci gyes"><input type="checkbox" class="g2s2" data-subj="과학" value="지구시스템과학" onchange="checkSciPrereq(this);pick('g2s2',4)"><span class="cn">지구시스템과학</span><span class="cc">3학점</span></label>
+    </div>
+    <span class="grp-label gl-수학">수학 추가</span>
+    <span class="grp-label gl-영어">영어 추가</span>
+    <span class="grp-label gl-국어">국어 추가</span>
+    <div class="cg">
+      <label class="ci gyes"><input type="checkbox" class="g2s2" data-subj="수학추가" value="수학과제 탐구" onchange="pick('g2s2',4)"><span class="cn">수학과제 탐구</span><span class="cc">3학점</span></label>
+      <label class="ci gyes"><input type="checkbox" class="g2s2" data-subj="영어추가" value="영미문학 읽기" onchange="pick('g2s2',4)"><span class="cn">영미문학 읽기</span><span class="cc">3학점</span></label>
+      <label class="ci gyes"><input type="checkbox" class="g2s2" data-subj="국어추가" value="문학과 영상" onchange="pick('g2s2',4)"><span class="cn">문학과 영상</span><span class="cc">3학점</span></label>
+    </div>
+  </div>
+</div>
+
+<!-- ════ 3학년 1학기 ════ -->
+<div class="sem-card s3-1">
+  <div class="sem-hd">
+    <span class="sem-title">3학년 1학기 선택</span>
+    <span class="rule-badge">사회+과학 <b>택3</b> &nbsp;|&nbsp; 국수영 추가 <b>택1</b></span>
+    <span class="cnt cnt-warn" id="cnt-g3s1sc">사과 0/3</span>
+    <span class="cnt cnt-warn" id="cnt-g3s1kme" style="margin-left:4px">추가 0/1</span>
+  </div>
+  <div class="sem-bd">
+    <div class="sub-hd">사회 + 과학 중 <span class="pick2">택3</span></div>
+    <span class="grp-label gl-사회">사회</span>
+    <div class="cg">
+      <label class="ci gfive"><input type="checkbox" class="g3s1sc" data-subj="사회" value="사회문제 탐구" onchange="pick('g3s1sc',3)"><span class="cn">사회문제 탐구</span><span class="cc">3학점</span></label>
+      <label class="ci gfive"><input type="checkbox" class="g3s1sc" data-subj="사회" value="역사로 탐구하는 현대 세계" onchange="pick('g3s1sc',3)"><span class="cn">역사로 탐구하는 현대 세계</span><span class="cc">3학점</span></label>
+      <label class="ci gfive"><input type="checkbox" class="g3s1sc" data-subj="사회" value="기후변화와 지속 가능한 세계" onchange="pick('g3s1sc',3)"><span class="cn">기후변화와 지속 가능한 세계</span><span class="cc">3학점</span></label>
+      <label class="ci gfive"><input type="checkbox" class="g3s1sc" data-subj="사회" value="윤리문제 탐구" onchange="pick('g3s1sc',3)"><span class="cn">윤리문제 탐구</span><span class="cc">3학점</span></label>
+    </div>
+    <span class="grp-label gl-과학">과학</span>
+    <div class="cg">
+      <label class="ci gyes"><input type="checkbox" class="g3s1sc" data-subj="과학" value="전자기와 양자" onchange="pick('g3s1sc',3)"><span class="cn">전자기와 양자</span><span class="cc">3학점</span></label>
+      <label class="ci gyes"><input type="checkbox" class="g3s1sc" data-subj="과학" value="화학 반응의 세계" onchange="pick('g3s1sc',3)"><span class="cn">화학 반응의 세계</span><span class="cc">3학점</span></label>
+      <label class="ci gyes"><input type="checkbox" class="g3s1sc" data-subj="과학" value="생물의 유전" onchange="pick('g3s1sc',3)"><span class="cn">생물의 유전</span><span class="cc">3학점</span></label>
+      <label class="ci gyes"><input type="checkbox" class="g3s1sc" data-subj="과학" value="행성우주과학" onchange="pick('g3s1sc',3)"><span class="cn">행성우주과학</span><span class="cc">3학점</span></label>
+    </div>
+    <hr class="divider">
+    <div class="sub-hd">국어 · 수학 · 영어 추가 중 <span class="pick2">택1</span></div>
+    <div class="cg">
+      <label class="ci gyes ri"><input type="radio" name="g3s1kme" class="g3s1kme" data-subj="수학추가" value="미적분Ⅱ" onchange="updRadioCnt('g3s1kme','cnt-g3s1kme','추가')"><span class="cn">미적분Ⅱ <span class="grp-label gl-수학" style="font-size:10px">수학</span></span><span class="cc">3학점</span></label>
+      <label class="ci gyes ri"><input type="radio" name="g3s1kme" class="g3s1kme" data-subj="영어추가" value="세계문화와 영어" onchange="updRadioCnt('g3s1kme','cnt-g3s1kme','추가')"><span class="cn">세계문화와 영어 <span class="grp-label gl-영어" style="font-size:10px">영어</span></span><span class="cc">3학점</span></label>
+      <label class="ci gyes ri"><input type="radio" name="g3s1kme" class="g3s1kme" data-subj="국어추가" value="주제 탐구독서" onchange="updRadioCnt('g3s1kme','cnt-g3s1kme','추가')"><span class="cn">주제 탐구독서 <span class="grp-label gl-국어" style="font-size:10px">국어</span></span><span class="cc">3학점</span></label>
+    </div>
+  </div>
+</div>
+
+<!-- ════ 3학년 2학기 ════ -->
+<div class="sem-card s3-2">
+  <div class="sem-hd">
+    <span class="sem-title">3학년 2학기 선택</span>
+    <span class="rule-badge">사회+과학 <b>택3</b> &nbsp;|&nbsp; 국수영 추가 <b>택1</b></span>
+    <span class="cnt cnt-warn" id="cnt-g3s2sc">사과 0/3</span>
+    <span class="cnt cnt-warn" id="cnt-g3s2kme" style="margin-left:4px">추가 0/1</span>
+  </div>
+  <div class="sem-bd">
+    <div class="sub-hd">사회 + 과학 중 <span class="pick2">택3</span></div>
+    <span class="grp-label gl-사회">사회</span>
+    <div class="cg">
+      <label class="ci gfive"><input type="checkbox" class="g3s2sc" data-subj="사회" value="금융과 경제 생활" onchange="pick('g3s2sc',3)"><span class="cn">금융과 경제 생활</span><span class="cc">3학점</span></label>
+      <label class="ci gfive"><input type="checkbox" class="g3s2sc" data-subj="사회" value="역사로 탐구하는 현대 세계" onchange="pick('g3s2sc',3)"><span class="cn">역사로 탐구하는 현대 세계</span><span class="cc">3학점</span></label>
+      <label class="ci gfive"><input type="checkbox" class="g3s2sc" data-subj="사회" value="여행지리" onchange="pick('g3s2sc',3)"><span class="cn">여행지리</span><span class="cc">3학점</span></label>
+      <label class="ci gfive"><input type="checkbox" class="g3s2sc" data-subj="사회" value="윤리문제 탐구" onchange="pick('g3s2sc',3)"><span class="cn">윤리문제 탐구</span><span class="cc">3학점</span></label>
+    </div>
+    <span class="grp-label gl-과학">과학</span>
+    <div class="cg">
+      <label class="ci gfive"><input type="checkbox" class="g3s2sc" data-subj="과학" value="기후변화와 환경생태" onchange="pick('g3s2sc',3)"><span class="cn">기후변화와 환경생태</span><span class="cc">3학점</span></label>
+      <label class="ci gfive"><input type="checkbox" class="g3s2sc" data-subj="과학" value="융합과학탐구" onchange="pick('g3s2sc',3)"><span class="cn">융합과학탐구</span><span class="cc">3학점</span></label>
+      <label class="ci gfive"><input type="checkbox" class="g3s2sc" data-subj="과학" value="과학의 역사와 문화" onchange="pick('g3s2sc',3)"><span class="cn">과학의 역사와 문화</span><span class="cc">3학점</span></label>
+    </div>
+    <hr class="divider">
+    <div class="sub-hd">국어 · 수학 · 영어 추가 중 <span class="pick2">택1</span></div>
+    <div class="cg">
+      <label class="ci gyes ri"><input type="radio" name="g3s2kme" class="g3s2kme" data-subj="수학추가" value="수학과 문화" onchange="updRadioCnt('g3s2kme','cnt-g3s2kme','추가')"><span class="cn">수학과 문화 <span class="grp-label gl-수학" style="font-size:10px">수학</span></span><span class="cc">3학점</span></label>
+      <label class="ci gyes ri"><input type="radio" name="g3s2kme" class="g3s2kme" data-subj="영어추가" value="실생활 영어 회화" onchange="updRadioCnt('g3s2kme','cnt-g3s2kme','추가')"><span class="cn">실생활 영어 회화 <span class="grp-label gl-영어" style="font-size:10px">영어</span></span><span class="cc">3학점</span></label>
+      <label class="ci gyes ri"><input type="radio" name="g3s2kme" class="g3s2kme" data-subj="국어추가" value="매체 의사소통" onchange="updRadioCnt('g3s2kme','cnt-g3s2kme','추가')"><span class="cn">매체 의사소통 <span class="grp-label gl-국어" style="font-size:10px">국어</span></span><span class="cc">3학점</span></label>
+    </div>
+  </div>
+</div>
+
+<!-- ─── 예술 (학기별, 자동 연동) ─── -->
+<div class="card">
+  <div class="card-hd" onclick="tog(this)">
+    <span class="card-title">🎨 예술 (학기집중이수)</span>
+    <span style="font-size:12px;color:#888">▼ 펼치기</span>
+  </div>
+  <div class="card-bd open">
+    <div class="sub-hd">2학년 1학기 – 지정</div>
+    <div class="cg"><div class="fixed-ci gno"><span class="cn">음악</span><span class="cc">2학점</span></div></div>
+    <div class="sub-hd">2학년 2학기 – 지정</div>
+    <div class="cg"><div class="fixed-ci gno"><span class="cn">미술</span><span class="cc">2학점</span></div></div>
+
+    <hr class="divider">
+    <div class="sub-hd">3학년 – 음악 또는 미술 트랙 <span class="pick2">택1</span> <small style="color:#888;font-weight:normal">(선택하면 3학년 1·2학기 자동결정)</small></div>
+    <div class="cg">
+      <label class="ci gno ri"><input type="radio" name="arts1" value="음악연주와 창작" onchange="updateArts()"><span class="cn">음악연주와 창작 <small style="color:#888">(3학년1학기)</small></span><span class="cc">3학점</span></label>
+      <label class="ci gno ri"><input type="radio" name="arts1" value="미술창작" onchange="updateArts()"><span class="cn">미술창작 <small style="color:#888">(3학년1학기)</small></span><span class="cc">3학점</span></label>
+    </div>
+    <div class="sub-hd">3학년 2학기 – (자동결정)</div>
+    <div class="auto-sel-box" id="arts2-display"><span class="auto-none">위에서 음악 또는 미술 트랙 선택 후 자동 결정</span></div>
+  </div>
+</div>
+
+<!-- ─── 기술·가정 / 제2외국어 / 정보 ─── -->
+<div class="card">
+  <div class="card-hd" onclick="tog(this)">
+    <span class="card-title">🔧 기술·가정 / 제2외국어 / 정보</span>
+    <span style="font-size:12px;color:#888">▼ 펼치기</span>
+  </div>
+  <div class="card-bd open">
+    <div class="sub-hd">1학년 – 지정</div>
+    <div class="cg">
+      <div class="fixed-ci gyes"><span class="cn">기술·가정 (1학기)</span><span class="cc">3학점</span></div>
+      <div class="fixed-ci gyes"><span class="cn">정보 (2학기)</span><span class="cc">3학점</span></div>
+    </div>
+    <div class="sub-hd">2학년 1학기 – 제2외국어 <span class="pick2">택1</span></div>
+    <div class="cg">
+      <label class="ci gyes ri"><input type="radio" name="lang2s1" value="중국어" onchange="radStyle('lang2s1');updateCrTable()"><span class="cn">중국어</span><span class="cc">3학점</span></label>
+      <label class="ci gyes ri"><input type="radio" name="lang2s1" value="일본어" onchange="radStyle('lang2s1');updateCrTable()"><span class="cn">일본어</span><span class="cc">3학점</span></label>
+    </div>
+    <div class="sub-hd">2학년 2학기 – 제2외국어 <span class="pick2">택1</span></div>
+    <div class="cg">
+      <label class="ci gyes ri"><input type="radio" name="lang2s2" value="중국어 회화" onchange="radStyle('lang2s2');updateCrTable()"><span class="cn">중국어 회화</span><span class="cc">3학점</span></label>
+      <label class="ci gyes ri"><input type="radio" name="lang2s2" value="일본어 회화" onchange="radStyle('lang2s2');updateCrTable()"><span class="cn">일본어 회화</span><span class="cc">3학점</span></label>
+    </div>
+    <div class="sub-hd">3학년 1학기 – 선택 <span class="pick2">택1</span></div>
+    <div class="cg">
+      <label class="ci gyes ri"><input type="radio" name="etc3s1" value="아동 발달과 부모" onchange="radStyle('etc3s1');updateCrTable()"><span class="cn">아동 발달과 부모</span><span class="cc">3학점</span></label>
+      <label class="ci gyes ri"><input type="radio" name="etc3s1" value="인공지능기초" onchange="radStyle('etc3s1');updateCrTable()"><span class="cn">인공지능기초</span><span class="cc">3학점</span></label>
+      <label class="ci gyes ri"><input type="radio" name="etc3s1" value="중국 문화" onchange="radStyle('etc3s1');updateCrTable()"><span class="cn">중국 문화</span><span class="cc">3학점</span></label>
+      <label class="ci gyes ri"><input type="radio" name="etc3s1" value="일본문화" onchange="radStyle('etc3s1');updateCrTable()"><span class="cn">일본문화</span><span class="cc">3학점</span></label>
+    </div>
+    <div class="sub-hd">3학년 2학기 – 선택 <span class="pick2">택1</span></div>
+    <div class="cg">
+      <label class="ci gyes ri"><input type="radio" name="etc3s2" value="지식 재산 일반" onchange="radStyle('etc3s2');updateCrTable()"><span class="cn">지식 재산 일반</span><span class="cc">3학점</span></label>
+      <label class="ci gyes ri"><input type="radio" name="etc3s2" value="소프트웨어와 생활" onchange="radStyle('etc3s2');updateCrTable()"><span class="cn">소프트웨어와 생활</span><span class="cc">3학점</span></label>
+      <label class="ci gyes ri"><input type="radio" name="etc3s2" value="관광 중국어" onchange="radStyle('etc3s2');updateCrTable()"><span class="cn">관광 중국어</span><span class="cc">3학점</span></label>
+      <label class="ci gyes ri"><input type="radio" name="etc3s2" value="관광 일본어" onchange="radStyle('etc3s2');updateCrTable()"><span class="cn">관광 일본어</span><span class="cc">3학점</span></label>
+    </div>
+  </div>
+</div>
+
+<!-- ─── 소인수/공교/이음온 ─── -->
+<div class="card">
+  <div class="card-hd" onclick="tog(this)">
+    <span class="card-title">📝 소인수 / 공동교육과정 / 이음온 (직접 입력)</span>
+    <span style="font-size:12px;color:#888">▼ 펼치기</span>
+  </div>
+  <div class="card-bd">
+    <textarea id="extra" style="width:100%;height:70px;border:1px solid #ccc;border-radius:5px;padding:8px;font-size:12px;font-family:inherit;resize:vertical" placeholder="예시: 경제수학 3학점, 프로그래밍 기초 3학점"></textarea>
+  </div>
+</div>
+
+<!-- ─── 이수 학점 현황 ─── -->
+<div class="cr-card">
+  <h3>이수 학점 현황 <span style="font-size:11px;font-weight:normal;color:#888">(과목 선택 시 자동 업데이트)</span></h3>
+  <table class="ct">
+    <thead><tr><th>교과군</th><th>필수이수</th><th>1학년</th><th>2학년 선택</th><th>3학년 선택</th><th>합계</th><th>상태</th></tr></thead>
+    <tbody id="cr-body"></tbody>
+  </table>
+</div>
+
+<button class="btn-gen" onclick="generate()">나만의 3개년 편제표 생성하기 ▶</button>
+</div><!-- end #sel -->
+
+<!-- ═══════════ 결과 화면 ═══════════ -->
+<div id="out">
+  <div class="out-acts">
+    <button class="btn-back" onclick="goBack()">◀ 수정하기</button>
+    <button class="btn-print" onclick="window.print()">인쇄 / PDF 저장</button>
+    <span style="font-size:11px;color:#666">※ 인쇄 시 '배경 그래픽' 옵션을 켜면 색상이 함께 출력됩니다.</span>
+  </div>
+  <div class="sheet" id="sheet"></div>
+</div>
+
+<script>
+/* ─── 유틸 ─── */
+function tog(hd){
+  const bd=hd.nextElementSibling;
+  bd.classList.toggle('open');
+  hd.querySelector('span:last-child').textContent=bd.classList.contains('open')?'▲ 접기':'▼ 펼치기';
+}
+
+function parseNum(){
+  const v=document.getElementById('i-num').value.replace(/\D/g,'');
+  const d=document.getElementById('num-disp');
+  if(v.length===5){
+    d.textContent=`→ ${v[0]}학년 ${parseInt(v.slice(1,3))}반 ${parseInt(v.slice(3,5))}번`;
+  } else { d.textContent=''; }
+}
+
+/* 체크박스 max 강제 */
+function pick(cls, max){
+  const all=[...document.querySelectorAll('.'+cls)];
+  const checked=all.filter(c=>c.checked);
+  if(checked.length>max){
+    event.target.checked=false;
+    event.target.closest('.ci').classList.remove('ck');
+    alert(`이미 ${max}과목을 선택했습니다.\n다른 과목을 해제한 후 선택하세요.`);
+  }
+  updCbCnt(cls);
+  updateCrTable();
+}
+
+function updCbCnt(cls){
+  const maxMap={'g2s1':4,'g2s2':4,'g3s1sc':3,'g3s2sc':3};
+  const idMap={'g2s1':'cnt-g2s1','g2s2':'cnt-g2s2','g3s1sc':'cnt-g3s1sc','g3s2sc':'cnt-g3s2sc'};
+  const lblMap={'g2s1':'','g2s2':'','g3s1sc':'사과 ','g3s2sc':'사과 '};
+  const n=[...document.querySelectorAll('.'+cls+':checked')].length;
+  const mx=maxMap[cls], el=document.getElementById(idMap[cls]);
+  if(!el) return;
+  el.textContent=lblMap[cls]+n+' / '+mx;
+  el.className='cnt '+(n===mx?'cnt-ok':n>mx?'cnt-over':'cnt-warn');
+  document.querySelectorAll('.'+cls).forEach(c=>{
+    c.closest('.ci').classList.toggle('dis', !c.checked && n>=mx);
+  });
+}
+
+/* 라디오 카운터 업데이트 */
+function updRadioCnt(cls, cntId, label){
+  const n=[...document.querySelectorAll('.'+cls+':checked')].length;
+  const el=document.getElementById(cntId);
+  if(el){ el.textContent=label+' '+n+'/1'; el.className='cnt '+(n>=1?'cnt-ok':'cnt-warn'); }
+  // 라디오 스타일
+  document.querySelectorAll('.'+cls).forEach(r=>{
+    r.closest('.ci').classList.toggle('ck', r.checked);
+  });
+  updateCrTable();
+}
+
+/* ── 2학년 2학기 과학 선행과목 경고 ── */
+function checkSciPrereq(el){
+  if(!el.checked) return; // 해제 시에는 경고 없음
+  const PREREQ={
+    '역학과 에너지':'물리학',
+    '물질과 에너지':'화학',
+    '세포와 물질대사':'생명과학',
+    '지구시스템과학':'지구과학'
+  };
+  const prereq=PREREQ[el.value];
+  if(!prereq) return;
+  const alreadySelected=document.querySelector('.g2s1[value="'+prereq+'"]:checked');
+  if(!alreadySelected){
+    alert('⚠ 선행과목 주의\n\n'
+      +'"'+el.value+'"은(는) 1학기 "'+prereq+'"와 연계되는 과목입니다.\n\n'
+      +'2학기 과학 과목은 1학기와 연계성이 있으므로\n'
+      +'선행과목을 선택하지 않고 선택하면\n'
+      +'입시에 불이익이 예상됩니다.');
+  }
+}
+
+/* 라디오 스타일만 (체크 표시) */
+function radStyle(name){
+  document.querySelectorAll('input[name="'+name+'"]').forEach(r=>{
+    r.closest('.ci').classList.toggle('ck', r.checked);
+  });
+}
+
+/* 체크박스 체크 시 스타일 */
+document.addEventListener('change',e=>{
+  if(e.target.type==='checkbox'){
+    const ci=e.target.closest('.ci');
+    if(ci) ci.classList.toggle('ck', e.target.checked);
+  }
+});
+
+/* ── 예술 자동 연동 ── */
+function updateArts(){
+  radStyle('arts1');
+  const ARTS_PAIR={'음악연주와 창작':'음악감상과 비평','미술창작':'미술감상과 비평'};
+  const ARTS_LABEL={'음악연주와 창작':'음악 트랙','미술창작':'미술 트랙'};
+  const sel=document.querySelector('input[name="arts1"]:checked');
+  const el=document.getElementById('arts2-display');
+  if(sel){
+    const v=ARTS_PAIR[sel.value];
+    el.innerHTML=`<b>✔ ${v}</b> <small style="color:#888">(3학점 · ${ARTS_LABEL[sel.value]} 2학기 자동결정)</small>`;
+  } else {
+    el.innerHTML='<span class="auto-none">위에서 음악 또는 미술 트랙 선택 후 자동 결정</span>';
+  }
+  updateCrTable();
+}
+
+/* ── 이수 학점 현황 ── */
+function getVal(name){ const r=document.querySelector('input[name="'+name+'"]:checked'); return r?r.value:''; }
+function cbSum(cls){ return [...document.querySelectorAll('.'+cls+':checked')].length*3; }
+function cbSubjSum(cls,subj){ return [...document.querySelectorAll('.'+cls+'[data-subj="'+subj+'"]:checked')].length*3; }
+function radVal(name){ return getVal(name)?3:0; }
+
+function updateCrTable(){
+  const arts1val=getVal('arts1');
+  const 예술g3=arts1val?6:0; // 1학기 3학점 + 2학기 자동 3학점
+
+  const rows=[
+    {l:'국어',req:8,g1:7,g2:8,g3:6,ok:true},
+    {l:'수학',req:8,g1:8,g2:8,g3:6,ok:true},
+    {l:'영어',req:8,g1:7,g2:8,g3:6,ok:true},
+    {l:'한국사',req:6,g1:6,g2:0,g3:0,ok:true},
+    {l:'사회',req:8,g1:7,
+      g2:cbSubjSum('g2s1','사회')+cbSubjSum('g2s2','사회'),
+      g3:cbSubjSum('g3s1sc','사회')+cbSubjSum('g3s2sc','사회')},
+    {l:'과학',req:10,g1:9,
+      g2:cbSubjSum('g2s1','과학')+cbSubjSum('g2s2','과학'),
+      g3:cbSubjSum('g3s1sc','과학')+cbSubjSum('g3s2sc','과학')},
+    {l:'체육',req:10,g1:4,g2:4,g3:4,ok:true},
+    {l:'예술',req:10,g1:0,g2:4,g3:예술g3},
+    {l:'기술·가정/외국어/정보',req:16,g1:6,
+      g2:radVal('lang2s1')+radVal('lang2s2'),
+      g3:radVal('etc3s1')+radVal('etc3s2')},
+  ];
+
+  document.getElementById('cr-body').innerHTML=rows.map(r=>{
+    if(!('ok' in r)) r.ok=((r.g1+r.g2+r.g3)>=r.req);
+    const tot=r.g1+r.g2+r.g3;
+    return `<tr>
+      <td>${r.l}</td><td>${r.req}</td>
+      <td>${r.g1}</td><td style="color:${r.g2>0?'#1a5276':'#aaa'};font-weight:${r.g2>0?'bold':'normal'}">${r.g2}</td>
+      <td style="color:${r.g3>0?'#1a5276':'#aaa'};font-weight:${r.g3>0?'bold':'normal'}">${r.g3}</td>
+      <td><b>${tot}</b></td>
+      <td>${r.ok?'<span class="ok">✓ 충족</span>':'<span class="wn">⚠ 미달</span>'}</td>
+    </tr>`;
+  }).join('');
+}
+updateCrTable();
+
+/* ─── 편제표 생성 ─── */
+function getSubjCk(cls,subj){ return [...document.querySelectorAll('.'+cls+'[data-subj="'+subj+'"]:checked')].map(c=>c.value); }
+function getRadioCk(cls,subj){ return [...document.querySelectorAll('.'+cls+'[data-subj="'+subj+'"]:checked')].map(c=>c.value); }
+
+function generate(){
+  const numRaw=document.getElementById('i-num').value.replace(/\D/g,'');
+  const name=document.getElementById('i-name').value||'(이름)';
+  let numDisp='';
+  if(numRaw.length===5) numDisp=`${numRaw[0]}학년 ${parseInt(numRaw.slice(1,3))}반 ${parseInt(numRaw.slice(3,5))}번`;
+  else numDisp=numRaw;
+
+  const ARTS_PAIR={'음악연주와 창작':'음악감상과 비평','미술창작':'미술감상과 비평'};
+  const arts1=getVal('arts1');
+  const arts2=arts1?ARTS_PAIR[arts1]:'';
+
+  const D={
+    사회:{g2s1:getSubjCk('g2s1','사회'),g2s2:getSubjCk('g2s2','사회'),g3s1:getSubjCk('g3s1sc','사회'),g3s2:getSubjCk('g3s2sc','사회')},
+    과학:{g2s1:getSubjCk('g2s1','과학'),g2s2:getSubjCk('g2s2','과학'),g3s1:getSubjCk('g3s1sc','과학'),g3s2:getSubjCk('g3s2sc','과학')},
+    수추가:{g2s1:getSubjCk('g2s1','수학추가'),g2s2:getSubjCk('g2s2','수학추가'),
+            g3s1:getRadioCk('g3s1kme','수학추가'),g3s2:getRadioCk('g3s2kme','수학추가')},
+    영추가:{g2s1:getSubjCk('g2s1','영어추가'),g2s2:getSubjCk('g2s2','영어추가'),
+            g3s1:getRadioCk('g3s1kme','영어추가'),g3s2:getRadioCk('g3s2kme','영어추가')},
+    국추가:{g2s1:getSubjCk('g2s1','국어추가'),g2s2:getSubjCk('g2s2','국어추가'),
+            g3s1:getRadioCk('g3s1kme','국어추가'),g3s2:getRadioCk('g3s2kme','국어추가')},
+    arts1,arts2,
+    lang2s1:getVal('lang2s1'),lang2s2:getVal('lang2s2'),
+    etc3s1:getVal('etc3s1'),etc3s2:getVal('etc3s2'),
+    extra:document.getElementById('extra').value
+  };
+
+  /* ── 18컬럼 헬퍼 ── */
+  // 1학년 과목셀: cols 2+3 merged + col4(학점) → 3개 td
+  function fy1(n,cr){ return `<td colspan="2" class="fc">${n}</td><td class="fc" style="text-align:center">${cr}</td>`; }
+  // 2·3학년 과목셀: 과목명 + 학점 + 선택마크 → 3개 td
+  function ff3(n,cr){ return `<td class="fc">${n}</td><td class="fc" style="text-align:center">${cr}</td><td class="fc" style="text-align:center"><span class="sym-f">■</span></td>`; }
+  function fs3(n,cr){ return n?`<td class="sc">${n}</td><td class="sc" style="text-align:center">${cr}</td><td class="sc" style="text-align:center"><span class="sym-s">■</span></td>`:`<td class="ec"></td><td class="ec"></td><td class="ec"></td>`; }
+  function fa3(n,cr){ return n?`<td class="ac">${n}</td><td class="ac" style="text-align:center">${cr}</td><td class="ac" style="text-align:center"><span class="sym-a">■</span></td>`:`<td class="ec"></td><td class="ec"></td><td class="ec"></td>`; }
+  function ec3(){ return `<td class="ec"></td><td class="ec"></td><td class="ec"></td>`; }
+
+  // 사회 행 (선택 과목만, 동적 행수)
+  function socialRows(){
+    const r21=D.사회.g2s1,r22=D.사회.g2s2,r31=D.사회.g3s1,r32=D.사회.g3s2;
+    const max=Math.max(r21.length,r22.length,r31.length,r32.length,1);
+    return Array.from({length:max},(_,i)=>`<tr>
+      ${i===0?`<td class="gc" rowspan="${max}">사회<br><small>(8)</small></td>${fy1('통합사회1,2',7)}<td class="tc" rowspan="${max}">택4</td>`:''}
+      ${fs3(r21[i]||'',3)}${fs3(r22[i]||'',3)}
+      ${i===0?`<td class="tc" rowspan="${max}">택3</td>`:''}
+      ${fs3(r31[i]||'',3)}${fs3(r32[i]||'',3)}
+    </tr>`).join('');
+  }
+
+  // 과학 행
+  function sciRows(){
+    const r21=D.과학.g2s1,r22=D.과학.g2s2,r31=D.과학.g3s1,r32=D.과학.g3s2;
+    const max=Math.max(r21.length,r22.length,r31.length,r32.length,1);
+    const tot=max+1;
+    return Array.from({length:max},(_,i)=>`<tr>
+      ${i===0?`<td class="gc" rowspan="${tot}">과학<br><small>(10)</small></td>${fy1('통합과학1,2',7)}<td class="tc" rowspan="${max}"></td>`:''}
+      ${fs3(r21[i]||'',3)}${fs3(r22[i]||'',3)}
+      ${i===0?`<td class="tc" rowspan="${max}"></td>`:''}
+      ${fs3(r31[i]||'',3)}${fs3(r32[i]||'',3)}
+    </tr>`).join('')
+    +`<tr>${fy1('과학탐구실험1,2',2)}<td colspan="14" class="fc" style="font-size:10px;color:#888">1학년 지정 이수</td></tr>`;
+  }
+
+  // 국·수·영 추가선택 행
+  function kmeRows(){
+    const r21=[...D.수추가.g2s1,...D.영추가.g2s1,...D.국추가.g2s1];
+    const r22=[...D.수추가.g2s2,...D.영추가.g2s2,...D.국추가.g2s2];
+    const r31=[...D.수추가.g3s1,...D.영추가.g3s1,...D.국추가.g3s1];
+    const r32=[...D.수추가.g3s2,...D.영추가.g3s2,...D.국추가.g3s2];
+    if(!r21.length&&!r22.length&&!r31.length&&!r32.length) return '';
+    const max=Math.max(r21.length,r22.length,r31.length,r32.length,1);
+    return Array.from({length:max},(_,i)=>`<tr>
+      ${i===0?`<td class="gc" rowspan="${max}">국·수·영<br>추가선택</td><td colspan="3" class="fc" rowspan="${max}" style="font-size:10px">3개년 국영수<br>총 81학점까지</td><td class="tc" rowspan="${max}"></td>`:''}
+      ${fs3(r21[i]||'',3)}${fs3(r22[i]||'',3)}
+      ${i===0?`<td class="tc" rowspan="${max}">택1</td>`:''}
+      ${fs3(r31[i]||'',3)}${fs3(r32[i]||'',3)}
+    </tr>`).join('');
+  }
+
+  // 예술 행 (음악 또는 미술 트랙 1개)
+  function artsRows(){
+    const isMusic=(arts1==='음악연주와 창작');
+    const isArt=(arts1==='미술창작');
+    return `<tr>
+      <td class="gc" rowspan="2">예술<br><small>(10)</small></td>
+      <td class="fc" rowspan="2" style="font-size:9px;text-align:center">학기<br>집중<br>이수</td>
+      <td class="fc">음악</td><td class="fc" style="text-align:center">2</td>
+      <td class="tc"></td>${ec3()}${ec3()}
+      <td class="tc" rowspan="2">택1</td>
+      ${isMusic?fa3('음악연주와 창작',3):ec3()}
+      ${isMusic?fa3('음악감상과 비평',3):ec3()}
+    </tr>
+    <tr>
+      <td class="fc">미술</td><td class="fc" style="text-align:center">2</td>
+      <td class="tc"></td>${ec3()}${ec3()}
+      ${isArt?fa3('미술창작',3):ec3()}
+      ${isArt?fa3('미술감상과 비평',3):ec3()}
+    </tr>`;
+  }
+
+  // 기술·가정/제2외국어/정보 행
+  function etcRows(){
+    return `<tr>
+      <td class="gc" rowspan="4">기술·가정/<br>제2외국어/<br>정보<br><small>(16)</small></td>
+      <td class="fc" rowspan="4" style="font-size:9px;text-align:center">학기<br>집중<br>이수</td>
+      <td class="fc" rowspan="2">기술·가정</td><td class="fc" rowspan="2" style="text-align:center">3</td>
+      <td class="tc" rowspan="2">택1</td>
+      ${fs3(D.lang2s1,3)}${ec3()}
+      <td class="tc" rowspan="4">택1</td>
+      ${fs3(D.etc3s1,3)}${ec3()}
+    </tr>
+    <tr>
+      ${ec3()}${fs3(D.lang2s2,3)}
+      ${ec3()}${fs3(D.etc3s2,3)}
+    </tr>
+    <tr>
+      <td class="fc" rowspan="2">정보</td><td class="fc" rowspan="2" style="text-align:center">3</td>
+      <td class="tc" rowspan="2"></td>
+      ${ec3()}${ec3()}
+      ${ec3()}${ec3()}
+    </tr>
+    <tr>${ec3()}${ec3()}${ec3()}${ec3()}</tr>`;
+  }
+
+  // 하단 집계
+  const sel2과목수=cbSum('g2s1')/3+cbSum('g2s2')/3;
+  const sel3과목수=cbSum('g3s1sc')/3+cbSum('g3s2sc')/3+(arts1?2:0)+(D.etc3s1?1:0)+(D.etc3s2?1:0);
+  const kme추가=cbSubjSum('g2s1','수학추가')+cbSubjSum('g2s1','영어추가')+cbSubjSum('g2s1','국어추가')
+               +cbSubjSum('g2s2','수학추가')+cbSubjSum('g2s2','영어추가')+cbSubjSum('g2s2','국어추가')
+               +[...document.querySelectorAll('.g3s1kme:checked,.g3s2kme:checked')].length*3;
+  const 사회2=cbSubjSum('g2s1','사회')+cbSubjSum('g2s2','사회');
+  const 사회3=cbSubjSum('g3s1sc','사회')+cbSubjSum('g3s2sc','사회');
+  const 과학2=cbSubjSum('g2s1','과학')+cbSubjSum('g2s2','과학');
+  const 과학3=cbSubjSum('g3s1sc','과학')+cbSubjSum('g3s2sc','과학');
+
+  document.getElementById('sheet').innerHTML=`
+  <div class="s-title">나만의 3개년 교육과정 편제표</div>
+  <div class="s-sub">고양일고등학교 2025, 2026 입학생</div>
+  <div class="s-info">
+    <span>학번 : ${numDisp}</span><span>이름 : ${name}</span>
+    <span>작성일 : ${new Date().toLocaleDateString('ko-KR')}</span>
+  </div>
+  <div style="font-size:11px;margin-bottom:5px;color:#555">
+    ※ 2학년 수강 신청할 과목을 선택한 후 3학년 수강 신청할 과목과 함께 확인하세요. (사회 8학점, 과학 10학점 이수 확인)
+  </div>
+  <table class="tbl">
+    <colgroup>
+      <col style="width:58px">
+      <col style="width:56px"><col style="width:44px"><col style="width:24px">
+      <col style="width:24px">
+      <col style="width:68px"><col style="width:20px"><col style="width:18px">
+      <col style="width:68px"><col style="width:20px"><col style="width:18px">
+      <col style="width:24px">
+      <col style="width:68px"><col style="width:20px"><col style="width:18px">
+      <col style="width:68px"><col style="width:20px"><col style="width:18px">
+    </colgroup>
+    <thead>
+      <tr>
+        <th rowspan="3">교과군<br>(필수이수<br>학점)</th>
+        <th colspan="3" rowspan="3" style="background:#d5d8dc">1학년<br>(학교지정)</th>
+        <th colspan="7" class="th2">2학년</th>
+        <th colspan="7" class="th3">3학년</th>
+      </tr><tr>
+        <th rowspan="2" class="th2">구분</th>
+        <th colspan="3" class="th2">1학기</th><th colspan="3" class="th2">2학기</th>
+        <th rowspan="2" class="th3">구분</th>
+        <th colspan="3" class="th3">1학기</th><th colspan="3" class="th3">2학기</th>
+      </tr><tr>
+        <th class="th2">과목</th><th class="th2">학점</th><th class="th2">선택</th>
+        <th class="th2">과목</th><th class="th2">학점</th><th class="th2">선택</th>
+        <th class="th3">과목</th><th class="th3">학점</th><th class="th3">선택</th>
+        <th class="th3">과목</th><th class="th3">학점</th><th class="th3">선택</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td class="gc">국어<br><small>(8)</small></td>${fy1('공통국어1,2',7)}<td class="tc">지정</td>${ff3('문학',4)}${ff3('화법과 언어',4)}<td class="tc">지정</td>${ff3('독서와 작문',3)}${ff3('언어생활 탐구',3)}</tr>
+      <tr><td class="gc">수학<br><small>(8)</small></td>${fy1('공통수학1,2',8)}<td class="tc">지정</td>${ff3('대수',4)}${ff3('미적분Ⅰ',4)}<td class="tc">지정</td>${ff3('확률과 통계',3)}${ff3('실용 통계',3)}</tr>
+      <tr><td class="gc">영어<br><small>(8)</small></td>${fy1('공통영어1,2',7)}<td class="tc">지정</td>${ff3('영어Ⅰ',4)}${ff3('영어Ⅱ',4)}<td class="tc">지정</td>${ff3('영어 독해와 작문',3)}${ff3('심화 영어',3)}</tr>
+      <tr><td class="gc">한국사<br><small>(6)</small></td>${fy1('한국사',6)}<td colspan="14" class="fc" style="font-size:10px;color:#888">학교 지정 이수</td></tr>
+      ${socialRows()}
+      ${sciRows()}
+      ${kmeRows()}
+      <tr><td class="gc">체육<br><small>(10)</small></td>${fy1('체육1, 2',4)}<td class="tc">지정</td>${ff3('운동과 건강',2)}${ff3('스포츠 문화',2)}<td class="tc">지정</td>${ff3('스포츠 생활1',2)}${ff3('스포츠 생활2',2)}</tr>
+      ${artsRows()}
+      ${etcRows()}
+    </tbody>
+  </table>
+  <table class="sum-tbl" style="margin-top:10px">
+    <thead>
+      <tr>
+        <th rowspan="2" style="width:120px"></th>
+        <th>1학년</th><th>2학년</th><th>3학년</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td style="text-align:left;font-weight:bold">학년별 과목수</td><td>20</td><td>${sel2과목수}과목 선택</td><td>${sel3과목수}과목 선택</td></tr>
+      <tr><td style="text-align:left;font-weight:bold">국영수 이수학점</td><td>22</td><td>필수+선택=24+${kme추가>0?kme추가:'( )'}학점</td><td>24</td></tr>
+      <tr><td style="text-align:left;font-weight:bold">사회 이수학점</td><td>7</td><td>${사회2>0?사회2:'–'}</td><td>${사회3>0?사회3:'–'}</td></tr>
+      <tr><td style="text-align:left;font-weight:bold">과학 이수학점</td><td>8</td><td>${과학2>0?과학2:'–'}</td><td>${과학3>0?과학3:'–'}</td></tr>
+      <tr><td style="text-align:left;font-weight:bold;font-size:10px">소인수/공교/<br>이음온 이수과목(학점)</td><td colspan="3" style="text-align:left;font-size:11px">${D.extra||'–'}</td></tr>
+    </tbody>
+  </table>`;
+
+  document.getElementById('sel').style.display='none';
+  document.getElementById('out').style.display='block';
+  window.scrollTo(0,0);
+}
+
+function goBack(){
+  document.getElementById('out').style.display='none';
+  document.getElementById('sel').style.display='block';
+  window.scrollTo(0,0);
+}
+</script>
+</body>
+</html>
